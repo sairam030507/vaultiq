@@ -43,11 +43,11 @@ function Testimonials() {
             </p>
 
             <h3 className="mt-6 font-bold">
-              Priya Reddy
+              Pooja Rao
             </h3>
 
             <p className="text-sm text-slate-500">
-              Student
+              Product Designer
             </p>
           </div>
 
