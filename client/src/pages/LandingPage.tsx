@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 import Navbar from "../components/layout/Navbar";
-import FeatureCard from "../components/ui/FeatureCard";
+import FeatureCard from "../components/home/FeatureCard";
 import Testimonials from "../components/home/Testimonials";
 import Footer from "../components/layout/Footer";
 

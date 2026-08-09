@@ -37,3 +37,5 @@ export const expenses: Expense[] = [
     date: "2026-07-20",
   },
 ];
+
+export const initialExpenses = expenses;

@@ -1,171 +1,238 @@
 import { useMemo, useState } from "react";
-import {
-  FaWallet,
-  FaArrowUp,
-  FaArrowDown,
-  FaPiggyBank,
-} from "react-icons/fa";
 
 import Sidebar from "../components/layout/Sidebar";
-import Topbar from "../components/layout/Topbar";
-import SummaryCard from "../components/dashboard/SummaryCard";
-import ExpenseChart from "../components/charts/ExpenseChart";
-import RecentTransactions from "../components/transactions/RecentTransactions";
-import BudgetProgress from "../components/dashboard/BudgetProgress";
-import AddExpenseModal from "../components/transactions/AddExpenseModal";
-import TransactionToolbar from "../components/transactions/TransactionToolbar";
 
-import { useExpense } from "../context/ExpenseContext";
+import SummaryCard from "../components/dashboard/SummaryCard";
+import BudgetProgress from "../components/dashboard/BudgetProgress";
+import SearchBar from "../components/dashboard/SearchBar";
+import TransactionTable from "../components/dashboard/TransactionTable";
+import ExpenseChart from "../components/dashboard/ExpenseChart";
+import CategoryFilter from "../components/dashboard/CategoryFilter";
+import AIInsights from "../components/dashboard/AIInsights";
+
+import AddExpenseModal from "../components/transactions/AddExpenseModal";
+import EditExpenseModal from "../components/transactions/EditExpenseModal";
+
+import { initialExpenses } from "../data/expenses";
+import type { Expense } from "../types/expense";
 
 function Dashboard() {
-  const [open, setOpen] = useState(false);
+  const [expenses, setExpenses] =
+    useState<Expense[]>(initialExpenses);
+
+  const [isAddOpen, setIsAddOpen] = useState(false);
+
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const [selectedExpense, setSelectedExpense] =
+    useState<Expense | null>(null);
 
   const [search, setSearch] = useState("");
+
   const [category, setCategory] = useState("All");
-  const [sort, setSort] = useState("latest");
 
-  const { expenses } = useExpense();
+  const income = 50000;
 
-  const filteredExpenses = useMemo(() => {
-    let data = [...expenses];
+  const budget = 60000;
 
-    if (search) {
-      data = data.filter(
-        (expense) =>
-          expense.title
-            .toLowerCase()
-            .includes(search.toLowerCase()) ||
-          expense.category
-            .toLowerCase()
-            .includes(search.toLowerCase())
-      );
-    }
-
-    if (category !== "All") {
-      data = data.filter(
-        (expense) => expense.category === category
-      );
-    }
-
-    switch (sort) {
-      case "highest":
-        data.sort((a, b) => b.amount - a.amount);
-        break;
-
-      case "lowest":
-        data.sort((a, b) => a.amount - b.amount);
-        break;
-
-      case "oldest":
-        data.sort(
-          (a, b) =>
-            new Date(a.date).getTime() -
-            new Date(b.date).getTime()
-        );
-        break;
-
-      default:
-        data.sort(
-          (a, b) =>
-            new Date(b.date).getTime() -
-            new Date(a.date).getTime()
-        );
-    }
-
-    return data;
-  }, [expenses, search, category, sort]);
-
-  const totalExpenses = filteredExpenses.reduce(
+  const totalExpenses = expenses.reduce(
     (sum, expense) => sum + expense.amount,
     0
   );
 
-  const totalIncome = 70000;
-  const balance = totalIncome - totalExpenses;
+  const balance = income - totalExpenses;
+
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter((expense) => {
+      const matchesSearch = expense.title
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+      const matchesCategory =
+        category === "All" ||
+        expense.category === category;
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [expenses, search, category]);
+
+  const handleAddExpense = (
+    expense: Omit<Expense, "id">
+  ) => {
+    const newExpense: Expense = {
+      id: Date.now(),
+      ...expense,
+    };
+
+    setExpenses((prev) => [
+      newExpense,
+      ...prev,
+    ]);
+
+    setIsAddOpen(false);
+  };
+
+  const handleDeleteExpense = (id: number) => {
+    setExpenses((prev) =>
+      prev.filter((expense) => expense.id !== id)
+    );
+  };
+
+  const handleEditExpense = (expense: Expense) => {
+    setSelectedExpense(expense);
+    setIsEditOpen(true);
+  };
+
+  const handleUpdateExpense = (
+    updatedExpense: Expense
+  ) => {
+    setExpenses((prev) =>
+      prev.map((expense) =>
+        expense.id === updatedExpense.id
+          ? updatedExpense
+          : expense
+      )
+    );
+
+    setIsEditOpen(false);
+    setSelectedExpense(null);
+  };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex">
+    <div className="flex min-h-screen bg-slate-100">
+
+      {/* Sidebar */}
+
       <Sidebar />
 
-      <div className="flex-1 p-8">
+      {/* Main Content */}
 
-        <Topbar />
+      <main className="flex-1 p-6 md:p-10">
 
-        <div className="flex justify-between items-center mt-8">
+        {/* Header */}
+
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+
           <div>
-            <h1 className="text-4xl font-bold">
+
+            <h1 className="text-4xl font-bold text-slate-900">
               Dashboard
             </h1>
 
-            <p className="text-gray-500">
-              Welcome back 👋
+            <p className="text-slate-500 mt-2">
+              Welcome back to VaultIQ 👋
             </p>
+
           </div>
 
           <button
-            onClick={() => setOpen(true)}
-            className="bg-blue-600 text-white px-6 py-3 rounded-xl"
+            onClick={() => setIsAddOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition"
           >
             + Add Expense
           </button>
+
         </div>
 
-        <div className="grid xl:grid-cols-4 md:grid-cols-2 gap-6 mt-8">
+        {/* Summary Cards */}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
 
           <SummaryCard
-            title="Balance"
-            amount={`₹${balance.toLocaleString()}`}
-            icon={<FaWallet />}
-            color="bg-blue-600"
+            title="Total Balance"
+            amount={balance}
+            color="blue"
           />
 
           <SummaryCard
             title="Income"
-            amount={`₹${totalIncome.toLocaleString()}`}
-            icon={<FaArrowUp />}
-            color="bg-green-600"
+            amount={income}
+            color="green"
           />
 
           <SummaryCard
             title="Expenses"
-            amount={`₹${totalExpenses.toLocaleString()}`}
-            icon={<FaArrowDown />}
-            color="bg-red-600"
+            amount={totalExpenses}
+            color="red"
           />
 
           <SummaryCard
-            title="Transactions"
-            amount={filteredExpenses.length.toString()}
-            icon={<FaPiggyBank />}
-            color="bg-purple-600"
+            title="Budget"
+            amount={budget}
+            color="purple"
           />
 
         </div>
 
-        <div className="mt-8">
-          <TransactionToolbar
-            search={search}
-            setSearch={setSearch}
-            category={category}
-            setCategory={setCategory}
-            sort={sort}
-            setSort={setSort}
-          />
+        {/* Budget Progress */}
+
+        <BudgetProgress
+          budget={budget}
+          expenses={totalExpenses}
+        />
+
+        {/* Search and Filter */}
+
+        <div className="bg-white rounded-2xl shadow p-6 mt-8">
+
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+            <SearchBar
+              search={search}
+              setSearch={setSearch}
+            />
+
+            <CategoryFilter
+              category={category}
+              setCategory={setCategory}
+            />
+
+          </div>
+
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6 mt-8">
-          <ExpenseChart />
-          <BudgetProgress />
-        </div>
+        {/* Transactions */}
 
-        <RecentTransactions expenses={filteredExpenses} />
+        <TransactionTable
+          expenses={filteredExpenses}
+          onDelete={handleDeleteExpense}
+          onEdit={handleEditExpense}
+        />
 
-      </div>
+        {/* Expense Chart */}
+
+        <ExpenseChart
+          expenses={expenses}
+        />
+
+        {/* AI Insights */}
+
+        <AIInsights
+          expenses={expenses}
+        />
+
+      </main>
+
+      {/* Add Expense Modal */}
 
       <AddExpenseModal
-        isOpen={open}
-        onClose={() => setOpen(false)}
+        isOpen={isAddOpen}
+        onClose={() => setIsAddOpen(false)}
+        onAddExpense={handleAddExpense}
       />
+
+      {/* Edit Expense Modal */}
+
+      <EditExpenseModal
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false);
+          setSelectedExpense(null);
+        }}
+        expense={selectedExpense}
+        onUpdateExpense={handleUpdateExpense}
+      />
+
     </div>
   );
 }

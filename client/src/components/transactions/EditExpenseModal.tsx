@@ -1,74 +1,71 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import type { Expense } from "../../types/expense";
 
-type Expense = {
-  title: string;
-  amount: number;
-  category: string;
-  date: string;
-};
-
-type AddExpenseModalProps = {
+type Props = {
   isOpen: boolean;
   onClose: () => void;
-  onAddExpense: (expense: Expense) => void;
+  expense: Expense | null;
+  onUpdateExpense: (expense: Expense) => void;
 };
 
-function AddExpenseModal({
+function EditExpenseModal({
   isOpen,
   onClose,
-  onAddExpense,
-}: AddExpenseModalProps) {
+  expense,
+  onUpdateExpense,
+}: Props) {
   const [title, setTitle] = useState("");
-  const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("Food");
+  const [amount, setAmount] = useState(0);
+  const [category, setCategory] = useState("");
   const [date, setDate] = useState("");
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (expense) {
+      setTitle(expense.title);
+      setAmount(expense.amount);
+      setCategory(expense.category);
+      setDate(expense.date);
+    }
+  }, [expense]);
 
-  const handleSave = () => {
-    if (!title || !amount || !date) return;
+  if (!isOpen || !expense) return null;
 
-    onAddExpense({
+  const handleUpdate = () => {
+    onUpdateExpense({
+      ...expense,
       title,
-      amount: Number(amount),
+      amount,
       category,
       date,
     });
-
-    setTitle("");
-    setAmount("");
-    setCategory("Food");
-    setDate("");
 
     onClose();
   };
 
   return (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
+
       <div className="bg-white rounded-2xl p-8 w-[450px]">
 
         <h2 className="text-2xl font-bold mb-6">
-          Add Expense
+          Edit Expense
         </h2>
 
         <input
-          type="text"
-          placeholder="Title"
-          className="w-full border p-3 rounded-lg mb-4"
+          className="w-full border rounded-lg p-3 mb-4"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
 
         <input
           type="number"
-          placeholder="Amount"
-          className="w-full border p-3 rounded-lg mb-4"
+          className="w-full border rounded-lg p-3 mb-4"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => setAmount(Number(e.target.value))}
         />
 
         <select
-          className="w-full border p-3 rounded-lg mb-4"
+          className="w-full border rounded-lg p-3 mb-4"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
         >
@@ -81,32 +78,33 @@ function AddExpenseModal({
 
         <input
           type="date"
-          className="w-full border p-3 rounded-lg"
+          className="w-full border rounded-lg p-3"
           value={date}
           onChange={(e) => setDate(e.target.value)}
         />
 
-        <div className="flex justify-end gap-3 mt-6">
+        <div className="flex justify-end gap-4 mt-6">
 
           <button
             onClick={onClose}
-            className="px-5 py-2 border rounded-lg"
+            className="border px-5 py-2 rounded-lg"
           >
             Cancel
           </button>
 
           <button
-            onClick={handleSave}
+            onClick={handleUpdate}
             className="bg-blue-600 text-white px-5 py-2 rounded-lg"
           >
-            Save Expense
+            Update
           </button>
 
         </div>
 
       </div>
+
     </div>
   );
 }
 
-export default AddExpenseModal;
+export default EditExpenseModal;
