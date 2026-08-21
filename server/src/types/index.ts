@@ -1,12 +1,21 @@
-export interface Expense {
+export interface IExpense {
   id: string | number;
+  userId?: string;
   title: string;
   amount: number;
   category: string;
-  date: string;
+  date: string; // YYYY-MM-DD
   paymentMethod?: string;
   notes?: string;
   createdAt?: string;
+}
+
+export interface MonthlyStats {
+  monthKey: string; // "YYYY-MM"
+  monthName: string; // "July 2026"
+  totalAmount: number;
+  count: number;
+  categoryBreakdown: Record<string, number>;
 }
 
 export interface CategoryForecast {
@@ -43,45 +52,29 @@ export interface Recommendation {
   priority: "high" | "medium" | "low";
 }
 
-export interface HistoricalTrendPoint {
-  month: string;
-  actual: number;
-  predicted?: number;
-}
-
-export interface MLPredictionData {
+export interface MLPredictionResult {
   nextMonthKey: string;
   nextMonthName: string;
   predictedTotal: number;
-  confidenceScore: number;
+  confidenceScore: number; // 0 - 100
   confidenceInterval: {
     lowerBound: number;
     upperBound: number;
   };
   trend: "increasing" | "decreasing" | "stable";
   percentageVsCurrentMonth: number;
-  historicalTrend: HistoricalTrendPoint[];
+  historicalTrend: {
+    month: string;
+    actual: number;
+    predicted?: number;
+  }[];
   categoryForecasts: CategoryForecast[];
   topDrivers: string[];
   anomalies: AnomalyAlert[];
   recommendations: Recommendation[];
   accuracyMetric: {
     rSquared: number;
-    mape: number;
+    mape: number; // Mean Absolute Percentage Error
     dataPointsCount: number;
   };
-}
-
-export interface SimulationResult {
-  originalTotal: number;
-  simulatedTotal: number;
-  totalSavings: number;
-  percentageSaved: number;
-  categories: {
-    category: string;
-    originalPredicted: number;
-    simulatedPredicted: number;
-    adjustmentPct: number;
-    savedAmount: number;
-  }[];
 }
